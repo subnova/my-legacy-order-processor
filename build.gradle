@@ -1,0 +1,78 @@
+version '1.0-SNAPSHOT'
+
+buildscript {
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE"
+        classpath 'com.avast.gradle:docker-compose-gradle-plugin:0.3.17'
+    }
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url 'http://repo.spring.io/plugins-release'
+        }
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    compile.exclude(module: 'spring-boot-starter-tomcat')
+}
+
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'docker-compose'
+
+mainClassName = 'legacyorder.Application'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-jetty"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-starter-cloud-connectors"
+    compile "org.springframework.boot:spring-boot-devtools"
+
+    compile "org.springframework.cloud:spring-cloud-starter-stream-kafka:1.1.1.RELEASE"
+
+    compile "org.springframework.cloud:spring-cloud-starter-sleuth:1.1.1.RELEASE"
+    compile "org.springframework.cloud:spring-cloud-sleuth-stream:1.1.1.RELEASE"
+
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+}
+
+
+compileJava.dependsOn(processResources)
+
+run {
+    systemProperties = System.properties
+}
+
+jar {
+    baseName = 'my-legacy-order-processor'
+}
+
+bootRepackage {
+    excludeDevtools = true
+}
+
+bootRun {
+    systemProperties = System.properties
+}
+
+composePull.dependsOn('build')
+composeUp.dependsOn('composePull')
+
+test {
+    useJUnit {
+        excludeCategories "legacyorder.IntegrationTest"
+    }
+}
+
